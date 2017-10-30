@@ -1,1 +1,43 @@
 BerrySecure
+
+SERVER
+
+- [ ] TCP socket + threads
+	should contain a socket for communication with android app
+	Server class should extend Activity
+	Server communication threads should extend Runnable
+- [ ] Camera screenshot functions
+- [ ] Activate Alarm Buzzer function
+- [ ] Read and respond to motion sensor output
+
+
+CLIENT
+
+- [ ] GUI Design
+
+- [ ] GUI Event Handling
+
+- [ ] TCP connection to server
+
+
+CAMERAS
+
+- [ ] Take screenshots of webcam footage in bitmap format for TCP comminication
+- [ ] Save feed to Raspberry Pi local storage
+
+
+
+MOTION SENSOR
+
+- [ ] Assign 2 wires of motion sensor to GPIO ports on Pi
+
+
+
+
+ALARM BUZZER
+
+- [ ] Assign 3 wires of motion sensor to GPIO ports on Pi
+
+
+
+
