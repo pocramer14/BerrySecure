@@ -12,12 +12,13 @@ public class BerrySafe{
 	boolean isArmed;
 
 	//Server I/O variables
-	ServerSocket servSock;
-	Socket sock;
-	Scanner sockScan;
-	PrintStream sockOut;
+	static ServerSocket servSock;
+	static Socket sock;
+	static Scanner sockScan;
+	static PrintStream sockOut;
 	
 	public void armAlarm(){
+		//when alarm is active, triggering of the Door/Window Sensors or Motion Sensor should result in Buzzer going off, a photo being taken, and the client being alerted
 		return;
 	}
 
@@ -26,6 +27,7 @@ public class BerrySafe{
 	}
 
 	public static void setupSensors(){
+		//setup GPIO ports for Motion Sensor, Door/Windows Sensors, and Buzzer
 		return;
 	}
 
@@ -38,11 +40,17 @@ public class BerrySafe{
 	}
 
 	public static void setupSocket(int port){
-		servSock = new ServerSocket(port);
-		sock = new servSock.accept();
-		sockScan = new Scanner(sock.getInputStream());
-		sockOut = new PrintStream(sock.getOutputStream());
+		try{
+			servSock = new ServerSocket(port);
+			sock = servSock.accept();
+			sockScan = new Scanner(sock.getInputStream());
+			sockOut = new PrintStream(sock.getOutputStream());
+		}
+		catch(IOException e){
+			//error handling here
+		}
 	}
+
 	public static void main(String[] args) throws IOException{
 		//setup server/client I/O variables
 		setupSocket(1337);
