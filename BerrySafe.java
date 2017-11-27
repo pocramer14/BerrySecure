@@ -26,6 +26,14 @@ public class BerrySafe{
 		return;
 	}
 
+	public void activateBuzzer(){
+		return;
+	}
+
+	public void deactivateBuzzer(){
+		return;
+	}
+
 	public static void setupSensors(){
 		//setup GPIO ports for Motion Sensor, Door/Windows Sensors, and Buzzer
 		return;
