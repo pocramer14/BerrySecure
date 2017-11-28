@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.InputStream;
 
 public class BerrySafe{
 	
@@ -14,8 +15,12 @@ public class BerrySafe{
 	//Server I/O variables
 	static ServerSocket servSock;
 	static Socket sock;
-	static Scanner sockScan;
+	static InputStream sockIn;
 	static PrintStream sockOut;
+
+	//Sensor Objects
+	MotionSensor motionSens;
+	DoorSensor doorSens;
 	
 	public void armAlarm(){
 		//when alarm is active, triggering of the Door/Window Sensors or Motion Sensor should result in Buzzer going off, a photo being taken, and the client being alerted
@@ -36,6 +41,8 @@ public class BerrySafe{
 
 	public static void setupSensors(){
 		//setup GPIO ports for Motion Sensor, Door/Windows Sensors, and Buzzer
+		
+		//also need to create seperate threads for handling sensor events
 		return;
 	}
 
@@ -51,7 +58,7 @@ public class BerrySafe{
 		try{
 			servSock = new ServerSocket(port);
 			sock = servSock.accept();
-			sockScan = new Scanner(sock.getInputStream());
+			sockIn = sock.getInputStream();
 			sockOut = new PrintStream(sock.getOutputStream());
 		}
 		catch(IOException e){
