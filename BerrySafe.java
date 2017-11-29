@@ -1,3 +1,10 @@
+//import com.pi4j.io.gpio.GpioController;
+//import com.pi4j.io.gpio.GpioFactory;
+//import com.pi4j.io.gpio.GpioPinDigital;
+//import com.pi4j.io.gpio.PinState;
+//import com.pi4j.io.gpio.RaspiPin;
+//import com.pi4j.io.gpio.*;
+import java.util.Arrays;
 import java.util.*;
 import java.lang.*;
 import java.net.ServerSocket;
@@ -33,6 +40,10 @@ public class BerrySafe{
 
 	//Buzzer variables
 	
+	//static final GpioController gpio;
+	//static final Pin buzzerPin;	
+	//static GpioPinDigitalOutput buzzerOutput
+
 	public void armAlarm(){
 		//when alarm is active, triggering of the Door/Window Sensors or Motion Sensor should result in Buzzer going off, a photo being taken, and the client being alerted
 		isArmed = true;
@@ -45,10 +56,12 @@ public class BerrySafe{
 	}
 
 	public static void activateBuzzer(){
+		//buzzerOutput = gpio.provisionDigitalOutputPin(buzzerPin, PinState.HIGH); 
 		return;
 	}
 
-	public void deactivateBuzzer(){
+	public static void deactivateBuzzer(){
+		//buzzerOutput = gpio.provisionDigitalOutputPin(buzzerPin, PinState.LOW); 
 		return;
 	}
 
@@ -69,6 +82,14 @@ public class BerrySafe{
 		doorSock = doorServSock.accept();
 		doorIn = doorSock.getInputStream();	
 	
+		// Setup Buzzer
+		
+		//gpio = GpioFactory.getInstance();
+		//Pin pins[] = RaspiPin.allPins();
+		//Arrays.sort(pins);
+		//buzzerPin = pins[1];
+		//buzzerPin.setShutdownOptions(true, PinState.LOW);
+
 		return;
 	}
 
@@ -144,9 +165,24 @@ public class BerrySafe{
 
 					//check for messages from MotionSensor
 					if(sockIn.available() > 0){
-
+						Scanner scan = new Scanner(sockIn);
+						String command = scan.next();
+						if(command.equals("1")){
+							//send a picture
+						}
+						else if(command.equals("2")){
+							//arm alarm
+							isArmed = true;
+							sockIn.skip(1);
+						}
+						else if(command.equals("3")){
+							//disarm alarm
+							isArmed = false;
+							intruderDetected = false;
+							deactivateBuzzer();
+							sockIn.skip(1);
+						}
 					}
-					
 					Thread.sleep(500);
 				}		
 			}catch(Exception e){
