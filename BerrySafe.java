@@ -1,9 +1,9 @@
-//import com.pi4j.io.gpio.GpioController;
-//import com.pi4j.io.gpio.GpioFactory;
-//import com.pi4j.io.gpio.GpioPinDigital;
-//import com.pi4j.io.gpio.PinState;
-//import com.pi4j.io.gpio.RaspiPin;
-//import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigital;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.RaspiPin;
+import com.pi4j.io.gpio.*;
 import java.util.Arrays;
 import java.util.*;
 import java.lang.*;
@@ -40,9 +40,9 @@ public class BerrySafe{
 
 	//Buzzer variables
 	
-	//static final GpioController gpio;
-	//static final Pin buzzerPin;	
-	//static GpioPinDigitalOutput buzzerOutput
+	static GpioController gpio;
+	static Pin buzzerPin;	
+	static GpioPinDigitalOutput buzzerOutput;
 
 	public void armAlarm(){
 		//when alarm is active, triggering of the Door/Window Sensors or Motion Sensor should result in Buzzer going off, a photo being taken, and the client being alerted
@@ -84,11 +84,11 @@ public class BerrySafe{
 	
 		// Setup Buzzer
 		
-		//gpio = GpioFactory.getInstance();
-		//Pin pins[] = RaspiPin.allPins();
-		//Arrays.sort(pins);
-		//buzzerPin = pins[1];
-		//buzzerPin.setShutdownOptions(true, PinState.LOW);
+		gpio = GpioFactory.getInstance();
+		Pin pins[] = RaspiPin.allPins();
+		Arrays.sort(pins);
+		buzzerPin = pins[1];
+		buzzerOutput.setShutdownOptions(true, PinState.LOW);
 
 		return;
 	}

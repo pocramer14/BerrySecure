@@ -1,10 +1,11 @@
-//import com.pi4j.io.gpio.*;
-//import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-//import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 public class DoorSensor extends Thread{
 
@@ -15,8 +16,6 @@ public class DoorSensor extends Thread{
 			PrintStream out = new PrintStream(sock.getOutputStream());		
 			
 			//setup GPIO
-
-			/*
 			final GpioController gpio = GpioFactory.getInstance();
 			Pin pins[] = RaspiPin.allPins();
 			Arrays.sort(pins);
@@ -32,7 +31,6 @@ public class DoorSensor extends Thread{
 						out.print("motion sensor triggered");
 				}
 			});
-			*/	
 
 			//loop while listening for Gpio Events
 			while(true){
