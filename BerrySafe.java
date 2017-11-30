@@ -1,5 +1,4 @@
-package webcamtutorial;
-
+import com.github.sarxos.webcam.*;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
 import java.awt.Dimension;
@@ -23,9 +22,12 @@ import java.io.InputStream;
 public class BerrySafe{
 	
 	/**** class variables ****/
-	
+	/*static {
+		Webcam.setDriver(new V4l4jDriver());
+	}*/	
 	static boolean intruderDetected;
 	static boolean isArmed;
+	static int imageCount;
 
 	//Server I/O variables
 	static ServerSocket servSock;
@@ -34,10 +36,7 @@ public class BerrySafe{
 	static PrintStream sockOut;
 
 	//DoorSensor variables
-	//static DoorSensor doorSens;
-	static ServerSocket doorServSock;
-	static Socket doorSock;
-	static InputStream doorIn;
+	static GpioPinDigitalInput doorInput;
 
 	//MotionSensor variables
 	static Pin motionSensorPin;
@@ -87,6 +86,10 @@ public class BerrySafe{
 		motionInput = gpio.provisionDigitalInputPin(motionSensorPin, PinPullResistance.PULL_DOWN);
 		motionInput.setShutdownOptions(true);
 
+		// Setup Door Sensor
+		doorInput = gpio.provisionDigitalInputPin(RaspiPin.GPIO_15, PinPullResistance.PULL_DOWN);
+		doorInput.setShutdownOptions(true);
+
 		System.out.println("finished setting up sensors..");
 		return;
 	}
@@ -99,7 +102,7 @@ public class BerrySafe{
 		webcam.setViewSize(new Dimension(640, 480));
 		webcam.setViewSize(WebcamResolution.VGA.getSize());
 		webcam.open();
-		String filename = "screenshot";
+		String filename = "/pics/screenshot"+imageCount;
 		ImageIO.write(webcam.getImage(), "JPG", new File(filename));
 		webcam.close();
 		return;
@@ -117,42 +120,48 @@ public class BerrySafe{
 			sockOut = new PrintStream(sock.getOutputStream());
 		}
 		catch(IOException e){
-			//error handling here
+			//error handling her
+			System.out.println("error connecting to app: "+e.getMessage());
 		}
 	}
 
 	public static void main(String[] args) throws Exception{
 		System.out.println("Setting up server/client socket..");
+		
 		//setup server/client I/O variables
-		//setupSocket(1337);	
-		System.out.println("Finished setting up server/client socket..");
+		ServerListener servListen = new ServerListener();
+		servListen.start();
+		setupSocket(1444);	
+		Scanner scan = new Scanner(sockIn);
+		System.out.println("Main thread connected to Server Listener...");
+		
 		//setup sensors
 		setupSensors();
 		activateBuzzer();
 		Thread.sleep(1000);
 		isArmed = false;
+		imageCount = 0;
+		//Scanner scan = new Scanner(sockIn);
 		System.out.println("Main function finished setting up...");
 		//do{
-			//try{
+			try{
 				//main program loop, check for changes in user/sensor input and react accordingly
 				while(true){
+					imageCount++;
+					//takePicture();
 					boolean notifyApp = false;
-					System.out.println("Buzzer State: "+buzzerOutput.getState());
-					if(motionInput.isHigh()){
-						System.out.println("message received from motion sensor");
-						if(!isArmed){
-							//if alarm isnt on, or if alarm is already triggered, then do nothing
-						}else{
-							System.out.println("Intruder Detected by Motion Sensor");
-							//set intruderDetected variable to true
-							intruderDetected = true;
+					//System.out.println("Buzzer State: "+buzzerOutput.getState());
+					if(motionInput.isHigh() && isArmed){
+						//if alarm isnt on, or if alarm is already triggered, then do nothing
+						//System.out.println("Intruder Detected by Motion Sensor");
+						//set intruderDetected variable to true
+						intruderDetected = true;
 							
-							//activate buzzer
-							deactivateBuzzer();
+						//activate buzzer
+						deactivateBuzzer();
 						
-							//notify app of intruder
-							notifyApp = true;
-						}
+						//notify app of intruder
+						notifyApp = true;
 					}
 
 					//check for messages from DoorSensor
@@ -174,33 +183,36 @@ public class BerrySafe{
 							doorIn.skip(1000);
 						}
 					}
-
+					*/
 					//check for messages from MotionSensor
-					if(sockIn.available() > 0){
-						Scanner scan = new Scanner(sockIn);
+
+					if(scan.hasNext()){
 						String command = scan.next();
+						System.out.println("Command received from Server Listener: "+command);
 						if(command.equals("1")){
 							//send a picture
+							System.out.println("Send picture to client");
 						}
-						else if(command.equals("2")){
+						else if(command.contains("Arm")){
 							//arm alarm
 							isArmed = true;
-							sockIn.skip(1);
+							System.out.println("Arm alarm");
+							//sockIn.skip(1);
 						}
-						else if(command.equals("3")){
+						else if(command.contains("Disarm")){
 							//disarm alarm
 							isArmed = false;
 							intruderDetected = false;
-							deactivateBuzzer();
-							sockIn.skip(1);
+							System.out.println("Disarm Alarm");
+							activateBuzzer();
+							//sockIn.skip(1);
 						}
 					}
-					*/
 				}		
-			/*}catch(Exception e){
+			}catch(Exception e){
 				//put error handling here
 				System.out.println("Error thrown in main: "+e.getMessage());
 			}
-		}while(true);*/
+		//}while(true);
 	}
 }
