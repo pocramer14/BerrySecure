@@ -7,13 +7,18 @@ package receive;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
+import sun.misc.BASE64Encoder;
 
 /**
  *
@@ -25,29 +30,48 @@ public class Receive {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        // TODO code application logic here
+       
+        
+        //Encode image
+        BufferedImage img = ImageIO.read(new File("/Users/timtran/Desktop/capturetest.png"));
+        BufferedImage newImg;
+        String imgstr;
+        imgstr = encodeToString(img, "png");
+        //System.out.println(imgstr);
+        
+        //create socket connection        
         ServerSocket serverSocket = new ServerSocket(9090);
         Socket socket = serverSocket.accept();
-        InputStream inputStream = socket.getInputStream();
-
-        System.out.println("Reading: " + System.currentTimeMillis());
-
-        byte[] sizeAr = new byte[4];
-        inputStream.read(sizeAr);
-        int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
-
-        byte[] imageAr = new byte[size];
-        inputStream.read(imageAr);
-
-        BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
-
-        System.out.println("Received " + image.getHeight() + "x" + image.getWidth() + ": " + System.currentTimeMillis());
-        ImageIO.write(image, "jpg", new File("/Users/timtran/Desktop/itworked2.jpg"));
-
+        
+        ObjectOutputStream oos = null;
+        oos = new ObjectOutputStream(socket.getOutputStream());
+        oos.writeObject(imgstr);
+        System.out.println("length of string: " + imgstr.length());
         serverSocket.close();
-        
-        
-        
     }
-    
+        //function to encode
+        public static String encodeToString(BufferedImage image, String type) throws IOException {
+        String imageString = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();        
+
+        try {
+            ImageIO.write(image, type, bos);
+            byte[] imageBytes = bos.toByteArray();
+
+            BASE64Encoder encoder = new BASE64Encoder();
+            imageString = encoder.encode(imageBytes);
+
+            bos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return imageString; 
+        }
 }
+        
+        
+      
+        
+        
+    
