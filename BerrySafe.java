@@ -1,3 +1,10 @@
+package webcamtutorial;
+
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamResolution;
+import java.awt.Dimension;
+import java.io.File;
+import javax.imageio.ImageIO;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigital;
@@ -27,19 +34,16 @@ public class BerrySafe{
 	static PrintStream sockOut;
 
 	//DoorSensor variables
-	static DoorSensor doorSens;
+	//static DoorSensor doorSens;
 	static ServerSocket doorServSock;
 	static Socket doorSock;
 	static InputStream doorIn;
 
 	//MotionSensor variables
-	static MotionSensor motionSens;
-	static ServerSocket motionServSock;
-	static Socket motionSock;
-	static InputStream motionIn;
+	static Pin motionSensorPin;
+	static GpioPinDigitalInput motionInput;
 
 	//Buzzer variables
-	
 	static GpioController gpio;
 	static Pin buzzerPin;	
 	static GpioPinDigitalOutput buzzerOutput;
@@ -56,44 +60,48 @@ public class BerrySafe{
 	}
 
 	public static void activateBuzzer(){
-		//buzzerOutput = gpio.provisionDigitalOutputPin(buzzerPin, PinState.HIGH); 
+		buzzerOutput.high();
 		return;
 	}
 
 	public static void deactivateBuzzer(){
-		//buzzerOutput = gpio.provisionDigitalOutputPin(buzzerPin, PinState.LOW); 
+		buzzerOutput.low(); 
 		return;
 	}
 
 	public static void setupSensors() throws IOException{
+		System.out.println("setting up sensors..");
 		//setup GPIO ports for Motion Sensor, Door/Windows Sensors, and Buzzer
 		
-		// Setup Motion Sensor thread + socket communication
-		motionSens = new MotionSensor();
-		motionSens.start();
-		motionServSock = new ServerSocket(1338);
-		motionSock = motionServSock.accept();
-		motionIn = motionSock.getInputStream();
-
-		// Setup Door Sensor thread + socket communication
-		doorSens = new DoorSensor();
-		doorSens.start();
-		doorServSock = new ServerSocket(1339);
-		doorSock = doorServSock.accept();
-		doorIn = doorSock.getInputStream();	
-	
 		// Setup Buzzer
-		
 		gpio = GpioFactory.getInstance();
 		Pin pins[] = RaspiPin.allPins();
 		Arrays.sort(pins);
-		buzzerPin = pins[1];
+		buzzerPin = pins[7];
+		buzzerOutput = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07, PinState.LOW);
 		buzzerOutput.setShutdownOptions(true, PinState.LOW);
+		buzzerOutput.low();
 
+		// Setup Motion Sensor
+		motionSensorPin = pins[0];
+		motionInput = gpio.provisionDigitalInputPin(motionSensorPin, PinPullResistance.PULL_DOWN);
+		motionInput.setShutdownOptions(true);
+
+		System.out.println("finished setting up sensors..");
 		return;
 	}
 
-	public static void takePicture(){
+	public static void takePicture() throws IOException{
+		Webcam webcam = Webcam.getDefault();
+		if(webcam != null){
+			System.out.println("Webcam: "+webcam.getName());
+		}else{System.out.println("No Webcam Detected");}
+		webcam.setViewSize(new Dimension(640, 480));
+		webcam.setViewSize(WebcamResolution.VGA.getSize());
+		webcam.open();
+		String filename = "screenshot";
+		ImageIO.write(webcam.getImage(), "JPG", new File(filename));
+		webcam.close();
 		return;
 	}
 	
@@ -113,38 +121,42 @@ public class BerrySafe{
 		}
 	}
 
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws Exception{
+		System.out.println("Setting up server/client socket..");
 		//setup server/client I/O variables
-		setupSocket(1337);
-		
+		//setupSocket(1337);	
+		System.out.println("Finished setting up server/client socket..");
 		//setup sensors
 		setupSensors();
-
-		do{
-			try{
+		activateBuzzer();
+		Thread.sleep(1000);
+		isArmed = false;
+		System.out.println("Main function finished setting up...");
+		//do{
+			//try{
 				//main program loop, check for changes in user/sensor input and react accordingly
 				while(true){
 					boolean notifyApp = false;
-					//check for messages from app
-					if(motionIn.available() > 0){
-						if(!isArmed || intruderDetected){
+					System.out.println("Buzzer State: "+buzzerOutput.getState());
+					if(motionInput.isHigh()){
+						System.out.println("message received from motion sensor");
+						if(!isArmed){
 							//if alarm isnt on, or if alarm is already triggered, then do nothing
 						}else{
+							System.out.println("Intruder Detected by Motion Sensor");
 							//set intruderDetected variable to true
 							intruderDetected = true;
 							
 							//activate buzzer
-							activateBuzzer();
+							deactivateBuzzer();
 						
 							//notify app of intruder
 							notifyApp = true;
-
-							//clear motion sensor input stream
-							motionIn.skip(1000);
 						}
 					}
 
 					//check for messages from DoorSensor
+					/*
 					if(doorIn.available() > 0){
 						if(!isArmed || intruderDetected){
 							//if alarm isnt on, or if alarm is already triggered, then do nothing
@@ -183,11 +195,12 @@ public class BerrySafe{
 							sockIn.skip(1);
 						}
 					}
-					Thread.sleep(500);
+					*/
 				}		
-			}catch(Exception e){
+			/*}catch(Exception e){
 				//put error handling here
+				System.out.println("Error thrown in main: "+e.getMessage());
 			}
-		}while(true);
+		}while(true);*/
 	}
 }
