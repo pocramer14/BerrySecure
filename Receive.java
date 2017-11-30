@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package receive;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -33,22 +32,24 @@ public class Receive {
        
         
         //Encode image
-        BufferedImage img = ImageIO.read(new File("/Users/timtran/Desktop/capturetest.png"));
+        BufferedImage img = ImageIO.read(new File("/home/joi/Pictures/that.png"));
         BufferedImage newImg;
         String imgstr;
         imgstr = encodeToString(img, "png");
         //System.out.println(imgstr);
-        
-        //create socket connection        
+  	while(true){
+        //create socket connection
+	System.out.println("Waiting for connections...");        
         ServerSocket serverSocket = new ServerSocket(9090);
         Socket socket = serverSocket.accept();
-        
+	System.out.println("Connection found!");
         ObjectOutputStream oos = null;
         oos = new ObjectOutputStream(socket.getOutputStream());
         oos.writeObject(imgstr);
         System.out.println("length of string: " + imgstr.length());
         serverSocket.close();
     }
+}
         //function to encode
         public static String encodeToString(BufferedImage image, String type) throws IOException {
         String imageString = null;
