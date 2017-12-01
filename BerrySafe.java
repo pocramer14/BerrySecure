@@ -151,7 +151,9 @@ public class BerrySafe{
 					//takePicture();
 					boolean notifyApp = false;
 					//System.out.println("Buzzer State: "+buzzerOutput.getState());
+					System.out.println("Motion Sensor State: "+motionInput.getState());
 					if(motionInput.isHigh() && isArmed){
+						System.out.println("motion sensor triggered");
 						//if alarm isnt on, or if alarm is already triggered, then do nothing
 						//System.out.println("Intruder Detected by Motion Sensor");
 						//set intruderDetected variable to true
@@ -165,25 +167,18 @@ public class BerrySafe{
 					}
 
 					//check for messages from DoorSensor
-					/*
-					if(doorIn.available() > 0){
-						if(!isArmed || intruderDetected){
-							//if alarm isnt on, or if alarm is already triggered, then do nothing
-						}else{
-							//set intruderDetectedvariable to true
-							intruderDetected = true;
+					
+					if(doorInput.isHigh() && isArmed){
+						System.out.println("Door Sensor triggered");
+						//set intruderDetectedvariable to true
+						intruderDetected = true;
 		
-							//activate buzzer
-							activateBuzzer();
+						//activate buzzer
+						deactivateBuzzer();
 
-							//notify app of intruder
-							notifyApp = true;
-
-							//clear door sensor input stream
-							doorIn.skip(1000);
-						}
+						//notify app of intruder
+						notifyApp = true;
 					}
-					*/
 					//check for messages from MotionSensor
 
 					if(scan.hasNext()){

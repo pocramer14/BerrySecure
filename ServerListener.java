@@ -4,7 +4,14 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.io.InputStream;
-
+import sun.misc.BASE64Encoder;
+import javax.imageio.ImageIO;
+import java.nio.ByteBuffer;
+import java.io.ObjectOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 public class ServerListener extends Thread{
 
 	public void run(){
@@ -25,6 +32,19 @@ public class ServerListener extends Thread{
 					System.out.println("Received message from app on ServerListener: "+command);
 					//forward message received from app to main thread
 					out.println(command);
+					if(command.contains("Image")){
+						System.out.println("ServerListener received image request");
+						ServerSocket imageServSock = new ServerSocket(1338);
+						Socket imageSock = imageServSock.accept();
+						//BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/image"+BerrySafe.imageCount));
+						BufferedImage newImg;
+						BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/test.png"));
+						String imgStr;
+						imgStr = encodeToString(img, "png");
+						ObjectOutputStream oos = null;
+						oos = new ObjectOutputStream(imageSock.getOutputStream());
+						oos.writeObject(imgStr);
+					}
 					servSock.close();
 					sock.close();
 					servSock = new ServerSocket(1337);
@@ -36,6 +56,22 @@ public class ServerListener extends Thread{
 			}	
 		}catch(Exception e){
 			//error handling here
+			System.out.println("Error in ServerListener thread: "+e.getMessage());
 		}
+	}
+	
+	public static String encodeToString(BufferedImage image, String type) throws IOException{
+		String imageString = null;
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		try{
+			ImageIO.write(image, type, bos);
+			byte[] imageBytes = bos.toByteArray();
+			BASE64Encoder encoder = new BASE64Encoder();
+			imageString = encoder.encode(imageBytes);
+			bos.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+		return imageString;
 	}
 }
