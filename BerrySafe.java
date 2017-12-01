@@ -18,6 +18,8 @@ import java.net.Socket;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 
 public class BerrySafe{
 	
@@ -95,17 +97,12 @@ public class BerrySafe{
 	}
 
 	public static void takePicture() throws IOException{
-		Webcam webcam = Webcam.getDefault();
-		if(webcam != null){
-			System.out.println("Webcam: "+webcam.getName());
-		}else{System.out.println("No Webcam Detected");}
-		webcam.setViewSize(new Dimension(640, 480));
-		webcam.setViewSize(WebcamResolution.VGA.getSize());
-		webcam.open();
-		String filename = "/pics/screenshot"+imageCount;
-		ImageIO.write(webcam.getImage(), "JPG", new File(filename));
-		webcam.close();
-		return;
+		Runtime runtime = Runtime.getRuntime();
+		Process process = runtime.exec("fswebcam -r 1280x720 pics/pic"+imageCount+".png");
+		InputStream is = process.getInputStream();
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader br = new BufferedReader(isr);
+		imageCount++;
 	}
 	
 	public static void sendPicToApp(){
@@ -132,13 +129,13 @@ public class BerrySafe{
 		ServerListener servListen = new ServerListener();
 		servListen.start();
 		setupSocket(1444);	
-		Scanner scan = new Scanner(sockIn);
+		//Scanner scan = new Scanner(sockIn);
 		System.out.println("Main thread connected to Server Listener...");
 		
 		//setup sensors
 		setupSensors();
 		activateBuzzer();
-		Thread.sleep(1000);
+		//Thread.sleep(500);
 		isArmed = false;
 		imageCount = 0;
 		//Scanner scan = new Scanner(sockIn);
@@ -147,8 +144,9 @@ public class BerrySafe{
 			try{
 				//main program loop, check for changes in user/sensor input and react accordingly
 				while(true){
-					imageCount++;
-					//takePicture();
+					System.out.println("test");
+					takePicture();
+					Thread.sleep(2000);
 					boolean notifyApp = false;
 					//System.out.println("Buzzer State: "+buzzerOutput.getState());
 					System.out.println("Motion Sensor State: "+motionInput.getState());
@@ -166,6 +164,7 @@ public class BerrySafe{
 						notifyApp = true;
 					}
 
+					System.out.println("test3");
 					//check for messages from DoorSensor
 					
 					if(doorInput.isHigh() && isArmed){
@@ -181,7 +180,9 @@ public class BerrySafe{
 					}
 					//check for messages from MotionSensor
 
-					if(scan.hasNext()){
+					System.out.println("test4");
+					if(sockIn.available() > 0){
+						Scanner scan = new Scanner(sockIn);
 						String command = scan.next();
 						System.out.println("Command received from Server Listener: "+command);
 						if(command.equals("1")){
@@ -203,6 +204,7 @@ public class BerrySafe{
 							//sockIn.skip(1);
 						}
 					}
+					System.out.println("test2");
 				}		
 			}catch(Exception e){
 				//put error handling here

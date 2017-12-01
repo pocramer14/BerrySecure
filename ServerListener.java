@@ -24,10 +24,13 @@ public class ServerListener extends Thread{
 			Socket sock = servSock.accept();
 			System.out.println("ServerListener connected to app..");
 			InputStream sockIn = sock.getInputStream();
+			//Scanner scan = new Scanner(sockIn);
+			PrintStream sockOut = new PrintStream(sock2.getOutputStream());
 			while(true){
-				Scanner scan = new Scanner(sockIn);
-				PrintStream sockOut = new PrintStream(sock2.getOutputStream());
-				if(scan.hasNext()){
+				//Scanner scan = new Scanner(sockIn);
+				//PrintStream sockOut = new PrintStream(sock2.getOutputStream());
+				if(sockIn.available() > 0){
+					Scanner scan = new Scanner(sockIn);
 					String command = scan.next();
 					System.out.println("Received message from app on ServerListener: "+command);
 					//forward message received from app to main thread
@@ -36,21 +39,26 @@ public class ServerListener extends Thread{
 						System.out.println("ServerListener received image request");
 						ServerSocket imageServSock = new ServerSocket(1338);
 						Socket imageSock = imageServSock.accept();
-						//BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/image"+BerrySafe.imageCount));
+						int index = BerrySafe.imageCount-1;
+						System.out.println("Attempting to send file: pic"+index);
+						BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/pic"+index+".png"));
 						BufferedImage newImg;
-						BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/test.png"));
+						//BufferedImage img = ImageIO.read(new File("/home/pi/462/BerrySafe/BerrySecure/pics/test.png"));
 						String imgStr;
 						imgStr = encodeToString(img, "png");
 						ObjectOutputStream oos = null;
 						oos = new ObjectOutputStream(imageSock.getOutputStream());
 						oos.writeObject(imgStr);
+						oos.close();
+						imageServSock.close();
+						imageSock.close();
 					}
 					servSock.close();
 					sock.close();
 					servSock = new ServerSocket(1337);
 					sock = servSock.accept();
 					sockIn = sock.getInputStream();
-					sockOut = new PrintStream(sock.getOutputStream());
+					sockOut = new PrintStream(sock2.getOutputStream());
 					System.out.println("ServerListener connected to app..");
 				}
 			}	
